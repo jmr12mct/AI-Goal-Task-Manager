@@ -34,3 +34,10 @@ Thumbs.db
 .env.development.local
 .env.testing.local
 .env.production.local
+
+# Local Node & Scratch Test Environments
+node_modules/
+package.json
+package-lock.json
+scratch/
+

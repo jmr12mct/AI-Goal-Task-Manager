@@ -28,9 +28,15 @@ AI-Goal-Task-Manager/
 ├── backend/
 │   ├── app/
 │   │   ├── __init__.py
-│   │   └── database.py             # SQLite database SQLModel definitions
+│   │   ├── database.py             # SQLite database SQLModel definitions
+│   │   └── main.py                 # FastAPI REST API bridge
 │   ├── .venv/                      # Python isolated virtual environment
 │   └── requirements.txt            # Package dependencies list
+│
+├── frontend/                       # Visual retro-futuristic HUD dashboard
+│   ├── index.html                  # HTML HUD container
+│   ├── styles.css                  # Custom cyber HUD stylesheet
+│   └── app.js                      # Controller engine & dynamic filters
 │
 ├── goalmanager.db                  # Local SQLite database file (gitignored)
 └── .gitignore                      # Git exclusion rules
@@ -64,6 +70,12 @@ Ensure your WSL environment is equipped with `python3` and `python3-venv`.
     python3 backend/app/database.py
     ```
     This creates `goalmanager.db` in your root folder and initializes all table schemas.
+
+5.  **Run the Visual Dashboard:**
+    ```bash
+    uvicorn backend.app.main:app --reload
+    ```
+    Open `http://127.0.0.1:8000` in your web browser to access the retro-futuristic HUD decision matrix console.
 
 ---
 

@@ -6,7 +6,7 @@
  * Preservation, collapsing nodes, minimizable terminal, and recovery.
  * ===================================================================== */
 
-const API_ENDPOINT = 'http://127.0.0.1:8000/api/dashboard';
+const API_ENDPOINT = '/api/dashboard';
 let rawDashboardState = null; // Caches raw data for dynamic filtering
 let retryCountdownTimer = null;
 let retrySecondsLeft = 5;
@@ -371,6 +371,8 @@ function renderStandaloneTasks(tasks) {
 function renderGoalsTree(goalsTree) {
     goalsTreeContainerEl.innerHTML = '';
     
+    console.log("LOG: renderGoalsTree called with nodes count =", goalsTree.length);
+    
     if (goalsTree.length === 0) {
         goalsTreeContainerEl.innerHTML = `
             <div class="log-line text-amber" style="text-align: center; padding: 60px 0; font-family: var(--font-mono);">
@@ -383,13 +385,15 @@ function renderGoalsTree(goalsTree) {
     }
     
     const sortedTopLevel = [...goalsTree].sort((a, b) => (b.priority_score || 0) - (a.priority_score || 0));
-    
+    let treeHtml = '';
     sortedTopLevel.forEach(epicNode => {
-        const epicHtml = compileGoalHierarchyNode(epicNode, 0);
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(epicHtml, 'text/html');
-        goalsTreeContainerEl.appendChild(doc.body.firstChild);
+        try {
+            treeHtml += compileGoalHierarchyNode(epicNode, 0);
+        } catch (err) {
+            console.error("LOG ERROR: Failed to compile epic node:", epicNode, err);
+        }
     });
+    goalsTreeContainerEl.innerHTML = treeHtml;
 }
 
 /* =====================================================================
@@ -490,9 +494,8 @@ function compileGoalHierarchyNode(goal, depth = 0) {
     // Render context anchor badge if this goal is only displayed for ancestral hierarchy context
     const anchorBadge = goal.isContextAnchor ? `<span class="anchor-badge">ANCHOR</span>` : '';
     
-    // Render an interactive collapsible indicator if there are nested sub-goals or tasks
-    const hasCollapsibleChildren = subGoals.length > 0 || totalTasks > 0;
-    const toggleIndicator = hasCollapsibleChildren ? `<span class="toggle-indicator">[ - ]</span>` : '';
+    // Collapsible logic removed - all nodes render fully expanded
+    const toggleIndicator = '';
     
     const paddingLeftStyle = depth > 0 ? `style="margin-left: 5px;"` : '';
     
@@ -574,42 +577,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 3. REGISTER RECURSIVE DELEGATION COLLAPSIBLE HOOK
-    goalsTreeContainerEl.addEventListener('click', (event) => {
-        // Intercept clicked goal header
-        const header = event.target.closest('.goal-header');
-        if (!header) return;
-        
-        // Prevent toggle if clicked interactive pills/badges
-        if (event.target.closest('.status-pill') || event.target.closest('.score-badge') || event.target.closest('.goal-category')) {
-            return;
-        }
-        
-        const node = header.closest('.goal-node');
-        if (!node) return;
-        
-        const subContainer = node.querySelector('.sub-goals-container');
-        const tasksList = node.querySelector('.goal-tasks-list');
-        const indicator = header.querySelector('.toggle-indicator');
-        
-        if (subContainer || tasksList) {
-            let isCollapsedNow = false;
-            
-            if (subContainer) {
-                subContainer.classList.toggle('collapsed');
-                isCollapsedNow = subContainer.classList.contains('collapsed');
-            }
-            if (tasksList) {
-                tasksList.classList.toggle('collapsed');
-                isCollapsedNow = tasksList.classList.contains('collapsed');
-            }
-            
-            if (indicator) {
-                indicator.textContent = isCollapsedNow ? '[ + ]' : '[ - ]';
-            }
-            
-            const levelTag = node.querySelector('.goal-badge').textContent;
-            logTerminal(`DIRECTIVES: Node #${node.dataset.id} (${levelTag}) ${isCollapsedNow ? 'COLLAPSED' : 'EXPANDED'}.`, 'cyan');
-        }
-    });
+    // 3. COLLAPSIBLE TREE INTERACTION REMOVED
 });
