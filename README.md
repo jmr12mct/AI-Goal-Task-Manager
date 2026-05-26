@@ -39,6 +39,9 @@ AI-Goal-Task-Manager/
 │   └── app.js                      # Controller engine & dynamic filters
 │
 ├── goalmanager.db                  # Local SQLite database file (gitignored)
+├── product.md                      # Product vision & feature specifications
+├── ui.md                           # UI/UX design tokens & layout guidelines
+├── engineering.md                  # Backend, schema, & algorithm blueprints
 └── .gitignore                      # Git exclusion rules
 ```
 
@@ -88,6 +91,15 @@ To run the verification checks:
 python3 -c "import sys; sys.path.append('.'); import _agent.skills.goal-tracker.scripts.local_tools" # Verification test command
 ```
 *(Alternatively, run the test script dynamically using the local path.)*
+
+---
+
+## 📖 Source of Truth Specs
+
+For detailed specifications and architectural blueprints, please refer directly to the absolute design documents:
+*   [product.md](product.md) – Product vision, features, Eisenhower prioritization, and soft-archive cascades.
+*   [ui.md](ui.md) – UI/UX design tokens, glowing HSL colors, responsive grids, and CRT scanning elements.
+*   [engineering.md](engineering.md) – Backend REST API architecture, database schemas, recursive DFS cascade algorithms, and CORS configurations.
 
 ---
 
