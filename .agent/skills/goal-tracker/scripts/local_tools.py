@@ -22,9 +22,10 @@ from sqlmodel import Session, select
 from backend.app.database import engine, Goals, Tasks, Settings, AuditLog, PendingConfirmations
 
 
-def add_goal(title: str, parent_id: int = None, level: str = "EPIC", urgency: int = 3, importance: int = 3) -> int:
+def add_goal(title: str, parent_id: int = None, level: str = "EPIC", urgency: int = 3, importance: int = 3, category: str = None) -> int:
     """
     Inserts a new Goal node into the hierarchical tree.
+    Optionally assigns a life-planning stream/category (e.g. CAREER, FAMILY, FINANCE).
     """
     with Session(engine) as session:
         # Validate parent_id existence if provided
@@ -39,6 +40,7 @@ def add_goal(title: str, parent_id: int = None, level: str = "EPIC", urgency: in
             goal_level=level.upper(),
             urgency=urgency,
             importance=importance,
+            category=category.strip() if category else None,
             status="ACTIVE"
         )
         session.add(goal)
@@ -207,10 +209,15 @@ def get_dashboard_state() -> str:
             g_dict["tasks"].sort(key=lambda t: t["priority_score"] or 0, reverse=True)
         standalone_tasks.sort(key=lambda t: t["priority_score"] or 0, reverse=True)
 
+        # Collect all unique, non-empty categories/streams assigned to active goals
+        categories_set = {g.category.strip() for g in active_goals if g.category and g.category.strip()}
+        available_streams = sorted(list(categories_set))
+
         dashboard_data = {
             "settings": settings,
             "goals_tree": top_level_goals,
             "standalone_tasks": standalone_tasks,
+            "available_streams": available_streams,
             "generated_at": datetime.now(timezone.utc).isoformat()
         }
         

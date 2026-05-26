@@ -59,9 +59,10 @@ When a matching user intent is parsed, execute the corresponding function in `sc
 ### A. Creating a Goal
 ```python
 # Signature
-add_goal(title: str, parent_id: int = None, level: str = "EPIC", urgency: int = 3, importance: int = 3) -> int
+add_goal(title: str, parent_id: int = None, level: str = "EPIC", urgency: int = 3, importance: int = 3, category: str = None) -> int
 ```
 *   *Instructions:* If the user says "Add a sub-goal called X to parent goal Y", first query the database to find Y's ID, then call `add_goal` passing that ID as `parent_id` and setting `level="MILESTONE"`.
+*   *Category/Stream Assignment:* If the user mentions a life domain (e.g. "career goal", "family project", "health target"), set `category` to the matching stream. Standard default streams are: `Career`, `Family`, `Property`, `Finance`, `Health`. Custom streams (e.g. `Travel`, `Hobbies`, `Education`) are also supported and will automatically appear in the dashboard filter.
 
 ### B. Creating a Task
 ```python

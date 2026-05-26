@@ -76,6 +76,9 @@ The screen space is divided into a three-pane grid structure configured for mode
 ### 2. Right Column: The Hierarchical Goal Tree (`tree-scroll-container`)
 - **Scroll Behavior:** Must use a standard block layout with `overflow-y: auto` to prevent flex items from collapsing (`flex-shrink`).
 - **Nesting Spacing:** Indented recursively using border-left guides to visualize parent-child relationships cleanly.
+- **Dual-Axis Controls:** Includes two side-by-side selector dropdowns:
+  - `STATUS`: Filters goals based on their current relational state.
+  - `STREAM`: A dynamically populated dropdown list generated from all active categories in the database, allowing users to slice their entire roadmap on the fly.
 
 ### 3. Footer: Audit Terminal (`hud-footer`)
 - Integrates a maximize/minimize toggle. Minimized state collapses the panel to exactly `45px` high to preserve screen real estate.

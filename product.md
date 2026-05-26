@@ -49,6 +49,10 @@ Instead of traditional task managers loaded with forms, nested popups, sliders, 
 ### 5. UTC/Timezone Security
 - Dates and deadlines are normalized to **UTC** to prevent timezone-shifting errors, while display outputs are formatted relative to the user's localized timezone setting (e.g. `Europe/London`).
 
+### 6. Dynamic Operational Streams (Sectors)
+- Directives are grouped into dynamic, database-driven life-planning streams (e.g. `CAREER`, `FAMILY`, `PROPERTY`, `FINANCE`, `HEALTH`).
+- Instead of a rigid, hardcoded menu, the dashboard dynamically queries unique category values assigned to active goals in the SQLite database and populates the filter options automatically, supporting instant custom streams (e.g. `TRAVEL`, `LEGAL`, `HOBBIES`) with zero code changes.
+
 ---
 
 ## 🖥️ The Visual Command Dashboard (Tactical HUD)
@@ -56,5 +60,5 @@ Instead of traditional task managers loaded with forms, nested popups, sliders, 
 The user interface is modeled after a **Retro-Futuristic Tactical HUD** command deck:
 - **Core Metrics:** High-density summary cards showing Total Goals, Completed Goals, Active Tasks, and Average Task Priority.
 - **Unassigned Operations:** A dedicated priority-sorted queue for standalone tasks.
-- **Hierarchical Goals Decision Tree:** A scrollable, nested visualization showing the complete active tree (Epics, Milestones, Micro-goals, and associated operations).
+- **Hierarchical Goals Decision Tree:** A scrollable, nested visualization showing the active tree (Epics, Milestones, Micro-goals, and associated tasks) with dual-axis status and dynamic stream filters using Ancestral Context Preservation.
 - **Tactical Audit Feed:** A live terminal logger capturing background synchronization heartbeats and execution ledger status.

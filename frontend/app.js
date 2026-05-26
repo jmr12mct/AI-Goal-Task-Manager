@@ -29,6 +29,7 @@ const standaloneTasksListEl = document.getElementById('standalone-tasks-list');
 const goalsTreeContainerEl = document.getElementById('goals-tree-container');
 
 const statusFilterEl = document.getElementById('status-filter');
+const streamFilterEl = document.getElementById('stream-filter');
 const terminalPanel = document.getElementById('terminal-panel');
 const terminalToggleBtn = document.getElementById('terminal-toggle-btn');
 
@@ -222,6 +223,26 @@ function processAndRenderDashboard() {
     
     logTerminal(`METRICS SYNC: Parsed ${totalGoals} directives, ${activeTasks} active operations.`, 'green');
     
+    // Update dynamic stream dropdown list
+    if (streamFilterEl) {
+        const currentSelection = streamFilterEl.value || 'ALL';
+        const streams = rawDashboardState.available_streams || [];
+        
+        let selectHtml = `<option value="ALL">ALL STREAMS</option>`;
+        streams.forEach(stream => {
+            selectHtml += `<option value="${escapeHtml(stream)}">${escapeHtml(stream.toUpperCase())}</option>`;
+        });
+        
+        streamFilterEl.innerHTML = selectHtml;
+        
+        // Restore previous selection if still valid, else default to 'ALL'
+        if (streams.includes(currentSelection)) {
+            streamFilterEl.value = currentSelection;
+        } else {
+            streamFilterEl.value = 'ALL';
+        }
+    }
+
     // 2. Render dynamic contents based on filter criteria
     applyFiltersAndCompileTree();
 }
@@ -233,22 +254,28 @@ function applyFiltersAndCompileTree() {
     if (!rawDashboardState) return;
     
     const selectedStatus = statusFilterEl ? statusFilterEl.value : 'ALL';
+    const selectedStream = streamFilterEl ? streamFilterEl.value : 'ALL';
     
-    logTerminal(`FILTER ENGINE: Status=[${selectedStatus}] (Ancestral Context Preservation ACTIVE)...`, 'cyan');
+    logTerminal(`FILTER ENGINE: Status=[${selectedStatus}] Stream=[${selectedStream}] (Ancestral Context Preservation ACTIVE)...`, 'cyan');
     
-    // A. Filter Standalone Tasks by status
+    // A. Filter Standalone Tasks by status and stream
     let filteredTasks = rawDashboardState.standalone_tasks || [];
-    if (selectedStatus === 'ACTIVE') {
-        filteredTasks = filteredTasks.filter(t => t.status === 'TODO' || t.status === 'IN_PROGRESS');
-    } else if (selectedStatus === 'COMPLETED') {
-        filteredTasks = filteredTasks.filter(t => t.status === 'COMPLETED');
-    } else if (selectedStatus === 'PAUSED') {
-        filteredTasks = []; // standalone tasks do not support PAUSED state
+    if (selectedStream !== 'ALL') {
+        // Standalone tasks have no stream/category assigned, so we hide them when a specific stream is filtered
+        filteredTasks = [];
+    } else {
+        if (selectedStatus === 'ACTIVE') {
+            filteredTasks = filteredTasks.filter(t => t.status === 'TODO' || t.status === 'IN_PROGRESS');
+        } else if (selectedStatus === 'COMPLETED') {
+            filteredTasks = filteredTasks.filter(t => t.status === 'COMPLETED');
+        } else if (selectedStatus === 'PAUSED') {
+            filteredTasks = []; // standalone tasks do not support PAUSED state
+        }
     }
     renderStandaloneTasks(filteredTasks);
     
     // B. Build filtered Goals Hierarchy with Ancestral Context Preservation
-    const filteredTree = compileFilteredTree(rawDashboardState.goals_tree || [], selectedStatus);
+    const filteredTree = compileFilteredTree(rawDashboardState.goals_tree || [], selectedStatus, selectedStream);
     renderGoalsTree(filteredTree);
     
     logTerminal(`DIRECTIVES: Rendered filtered tree. ${filteredTree.length} base contextual branches drawn.`, 'green');
@@ -257,21 +284,18 @@ function applyFiltersAndCompileTree() {
 /* =====================================================================
  * ANCESTRAL CONTEXT PRESERVATION FILTER IMPLEMENTATION
  * ===================================================================== */
-function checkGoalMatch(goal, selectedStatus) {
-    if (selectedStatus === 'ALL') return true;
+function checkGoalMatch(goal, selectedStatus, selectedStream) {
+    // 1. Check if the goal itself matches the stream filter
+    const matchesStream = (selectedStream === 'ALL' || (goal.category && goal.category.toLowerCase() === selectedStream.toLowerCase()));
     
-    // a) Goal's own status matches
-    if (goal.status === selectedStatus) return true;
+    // 2. Check if the goal itself matches the status filter
+    let matchesStatus = (selectedStatus === 'ALL' || goal.status === selectedStatus);
     
-    // b) Any recursive child goals match
-    if (goal.sub_goals && goal.sub_goals.length > 0) {
-        for (const sub of goal.sub_goals) {
-            if (checkGoalMatch(sub, selectedStatus)) return true;
-        }
-    }
+    // If it matches both directly, it's a direct match!
+    if (matchesStream && matchesStatus) return true;
     
-    // c) Any direct tasks match
-    if (goal.tasks && goal.tasks.length > 0) {
+    // 3. Check if any direct tasks match (only if the goal itself matches the stream filter!)
+    if (matchesStream && goal.tasks && goal.tasks.length > 0) {
         for (const task of goal.tasks) {
             if (selectedStatus === 'ACTIVE' && (task.status === 'TODO' || task.status === 'IN_PROGRESS')) {
                 return true;
@@ -285,15 +309,24 @@ function checkGoalMatch(goal, selectedStatus) {
         }
     }
     
+    // 4. Check recursively if any child goals match
+    if (goal.sub_goals && goal.sub_goals.length > 0) {
+        for (const sub of goal.sub_goals) {
+            if (checkGoalMatch(sub, selectedStatus, selectedStream)) {
+                return true;
+            }
+        }
+    }
+    
     return false;
 }
 
-function compileFilteredTree(nodes, selectedStatus) {
+function compileFilteredTree(nodes, selectedStatus, selectedStream) {
     let result = [];
     
     function processNode(node) {
         // Discard node completely if neither it nor its descendants match the filter
-        const hasAnyMatch = checkGoalMatch(node, selectedStatus);
+        const hasAnyMatch = checkGoalMatch(node, selectedStatus, selectedStream);
         if (!hasAnyMatch) {
             return null;
         }
@@ -310,7 +343,9 @@ function compileFilteredTree(nodes, selectedStatus) {
         }
         
         // Determine direct match status
-        const isDirectMatch = (selectedStatus === 'ALL' || node.status === selectedStatus);
+        const matchesStream = (selectedStream === 'ALL' || (node.category && node.category.toLowerCase() === selectedStream.toLowerCase()));
+        const matchesStatus = (selectedStatus === 'ALL' || node.status === selectedStatus);
+        const isDirectMatch = matchesStream && matchesStatus;
         
         return {
             ...node,
@@ -563,6 +598,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. REGISTER SELECT DROPDOWN FILTER TRIGGERS
     if (statusFilterEl) {
         statusFilterEl.addEventListener('change', () => {
+            applyFiltersAndCompileTree();
+        });
+    }
+    if (streamFilterEl) {
+        streamFilterEl.addEventListener('change', () => {
             applyFiltersAndCompileTree();
         });
     }

@@ -77,12 +77,18 @@ def _archive_goal_recursive(session: Session, goal_id: int):
         _archive_goal_recursive(session, sub_goal.id) # DFS Recurse
 ```
 
-### 2. Ancestral Context Preservation (Front-End Filter)
-When filtering the dashboard by status (e.g., show `COMPLETED` goals only), the system must preserve ancestral context. If a deep Micro-goal matches the filter but its parent Epic is `ACTIVE`, the Epic is drawn as a dashed **Muted Context Anchor** rather than being completely omitted, ensuring the user understands where the objective belongs.
+### 2. Ancestral Context Preservation & Dual-Axis Filtering (Front-End)
+When filtering the dashboard by status or category stream, the system must preserve ancestral context. If a deep Micro-goal matches the filters but its parent Epic does not, the Epic is drawn as a dashed **Muted Context Anchor** rather than being completely omitted, ensuring the user understands where the objective belongs.
 
 This is implemented inside `frontend/app.js`:
-- `checkGoalMatch()` recursively checks if a goal node or any of its children match the criteria.
+- `checkGoalMatch(goal, selectedStatus, selectedStream)` recursively checks if a goal node or any of its descendants match the status and category stream filters.
 - `compileFilteredTree()` filters the tree, marking goals that don't match directly but have matching descendants with `isContextAnchor: true`.
+
+### 3. Dynamic Sector Stream Collection & Population
+The visual planning streams are fully database-driven, removing code maintenance overhead:
+- **Dynamic Backend Extraction:** In `get_dashboard_state()`, the backend scans active goals and extracts unique category values dynamically:
+  `categories_set = {g.category.strip() for g in active_goals if g.category and g.category.strip()}`
+- **Dynamic Frontend Population:** Upon receiving the payload, `processAndRenderDashboard()` reads `available_streams` and populates the stream select dropdown menu while maintaining the user's current filter selection.
 
 ---
 
