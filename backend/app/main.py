@@ -20,7 +20,12 @@ ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if ROOT_DIR not in sys.path:
     sys.path.append(ROOT_DIR)
 
-import _agent.skills.goal_tracker.scripts.local_tools as tools
+# Inject skill's scripts directory so we can import local_tools directly!
+SKILL_SCRIPTS_DIR = os.path.join(ROOT_DIR, ".agent", "skills", "goal-tracker", "scripts")
+if SKILL_SCRIPTS_DIR not in sys.path:
+    sys.path.append(SKILL_SCRIPTS_DIR)
+
+import local_tools as tools
 from backend.app.database import init_db
 
 app = FastAPI(title="goalmanager REST API")
