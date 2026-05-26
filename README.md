@@ -7,8 +7,9 @@ A minimalist, voice/text-driven personal goal and task management system built w
 ## 🚀 Key Features
 
 *   **Semantic Command Processing:** Zero manual creation forms or complex sliders. Inputs are parsed by an AI command interpreter into strict relational database writes.
-*   **Infinite Goal Nesting:** Self-referential database hierarchy supporting nested objectives (Epic $\rightarrow$ Milestone $\rightarrow$ Micro-goal).
+*   **Infinite Goal Nesting:** Self-referential database hierarchy supporting nested objectives (Epic → Milestone → Micro-goal).
 *   **Eisenhower Prioritization:** Autocalculated priority matrices (`urgency * importance` score from 1 to 25) to float critical items to the top of your visual dashboard.
+*   **Dynamic Life Planning Streams:** Database-driven category/sector filtering (e.g. `Career`, `Family`, `Property`, `Finance`, `Health`). Custom streams are auto-detected from goal categories with zero code changes — they appear instantly in the dashboard's dual-axis filter.
 *   **Soft-Archive Cascades:** Deleting a master goal recursively archives all sub-goals and micro-tasks safely, enabling instant "Undo" restorations.
 *   **UTC/Timezone Security:** All timestamps are normalized to UTC based on your IANA local timezone setting to prevent late-night date drift.
 
@@ -34,9 +35,12 @@ AI-Goal-Task-Manager/
 │   └── requirements.txt            # Package dependencies list
 │
 ├── frontend/                       # Visual retro-futuristic HUD dashboard
-│   ├── index.html                  # HTML HUD container
+│   ├── index.html                  # HTML HUD container + dual-axis filters
 │   ├── styles.css                  # Custom cyber HUD stylesheet
-│   └── app.js                      # Controller engine & dynamic filters
+│   └── app.js                      # Controller engine, stream filters & context preservation
+│
+├── scratch/                        # E2E Playwright verification scripts
+│   └── verify_streams.js           # Dynamic stream filter integration test
 │
 ├── goalmanager.db                  # Local SQLite database file (gitignored)
 ├── product.md                      # Product vision & feature specifications
@@ -84,13 +88,18 @@ Ensure your WSL environment is equipped with `python3` and `python3-venv`.
 
 ## 🧪 Running Integration Verification Tests
 
-We maintain an E2E testing suite in the scratch directory to verify database actions without polluting your clean primary database.
+We maintain an E2E Playwright testing suite in the `scratch/` directory to verify dashboard rendering and dynamic filtering.
 
-To run the verification checks:
-```bash
-python3 -c "import sys; sys.path.append('.'); import _agent.skills.goal-tracker.scripts.local_tools" # Verification test command
-```
-*(Alternatively, run the test script dynamically using the local path.)*
+1.  **Start the server:**
+    ```bash
+    uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
+    ```
+
+2.  **Run the stream filter verification test:**
+    ```bash
+    node scratch/verify_streams.js
+    ```
+    This launches a headless Chromium browser, verifies dynamic stream dropdown population, tests dual-axis filtering with Ancestral Context Preservation, and saves a validation screenshot.
 
 ---
 
