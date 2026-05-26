@@ -1,11 +1,13 @@
 /* =====================================================================
- * 🎓 RETRO-FUTURISTIC TACTICAL HUD - CONTROLLER ENGINE
+ * 🎓 RETRO-FUTURISTIC TACTICAL HUD - CONTROLLER ENGINE (UX REFINED)
  * =====================================================================
  * Handles dashboard data synchronization, recursive node compilation, 
- * metrics aggregation, custom simulated logs, and offline recovery loops.
+ * metrics aggregation, dynamic multi-level filters, collapsing nodes,
+ * minimizable audit feed terminal, and offline recovery loops.
  * ===================================================================== */
 
 const API_ENDPOINT = 'http://127.0.0.1:8000/api/dashboard';
+let rawDashboardState = null; // Caches raw data for dynamic filtering
 let retryCountdownTimer = null;
 let retrySecondsLeft = 5;
 let isReconnecting = false;
@@ -24,6 +26,11 @@ const metricPriorityAvgEl = document.getElementById('metric-priority-avg');
 
 const standaloneTasksListEl = document.getElementById('standalone-tasks-list');
 const goalsTreeContainerEl = document.getElementById('goals-tree-container');
+
+const statusFilterEl = document.getElementById('status-filter');
+const levelFilterEl = document.getElementById('level-filter');
+const terminalPanel = document.getElementById('terminal-panel');
+const terminalToggleBtn = document.getElementById('terminal-toggle-btn');
 
 /* =====================================================================
  * SIMULATED TACTICAL AUDIT LOGGER
@@ -45,8 +52,10 @@ function logTerminal(message, type = 'muted') {
     
     logContent.appendChild(line);
     
-    // Auto-scroll to bottom of the terminal feed
-    logContent.scrollTop = logContent.scrollHeight;
+    // Auto-scroll to bottom if not minimized
+    if (!terminalPanel.classList.contains('minimized')) {
+        logContent.scrollTop = logContent.scrollHeight;
+    }
 }
 
 /* =====================================================================
@@ -115,8 +124,9 @@ async function syncDashboardData() {
         const now = new Date();
         syncTimeEl.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
         
-        // Render Dashboard Sub-systems
-        processAndRenderDashboard(data);
+        // Cache data and trigger processor
+        rawDashboardState = data;
+        processAndRenderDashboard();
         
     } catch (error) {
         console.error(error);
@@ -166,19 +176,17 @@ reconnectBtn.addEventListener('click', () => {
 });
 
 /* =====================================================================
- * DATA PROCESSOR & RENDER COMPILER
+ * DATA PROCESSOR & RENDER COMPILER (FILTER-SUPPORTED)
  * ===================================================================== */
-function processAndRenderDashboard(data) {
-    logTerminal('DECRYPTING GOAL DIRECTIVES TREE & TACTICAL METRICS...', 'cyan');
+function processAndRenderDashboard() {
+    if (!rawDashboardState) return;
     
-    const goalsTree = data.goals_tree || [];
-    const standaloneTasks = data.standalone_tasks || [];
+    const goalsTree = rawDashboardState.goals_tree || [];
+    const standaloneTasks = rawDashboardState.standalone_tasks || [];
     
-    // 1. Flatten the recursive hierarchy for metrics aggregation
+    // 1. Aggregates metrics from absolute raw state (shows overall operational capacity)
     const allGoalsFlat = flattenGoalsTree(goalsTree);
-    logTerminal(`SUCCESSFULLY PARSED: ${allGoalsFlat.length} TOTAL GOAL DIRECTIVES.`, 'green');
     
-    // Gather all tasks (both standalone and nested deep within hierarchy)
     let allTasks = [...standaloneTasks];
     allGoalsFlat.forEach(goal => {
         if (goal.tasks) {
@@ -186,31 +194,88 @@ function processAndRenderDashboard(data) {
         }
     });
     
-    // Calculate metric parameters
     const totalGoals = allGoalsFlat.length;
     const completedGoals = allGoalsFlat.filter(g => g.status === 'COMPLETED').length;
-    
-    // Active tasks: those which are TODO or IN_PROGRESS
     const activeTasks = allTasks.filter(t => t.status === 'TODO' || t.status === 'IN_PROGRESS').length;
     
-    // Average Task Eisenhower Priority Score
     const sumPriority = allTasks.reduce((sum, t) => sum + (t.priority_score || 0), 0);
     const avgPriority = allTasks.length > 0 ? (sumPriority / allTasks.length).toFixed(1) : '0.0';
     
-    // Render Stats to core metrics HUD
     metricGoalsTotalEl.textContent = totalGoals;
     metricGoalsCompletedEl.textContent = completedGoals;
     metricTasksActiveEl.textContent = activeTasks;
     metricPriorityAvgEl.textContent = avgPriority;
     
-    logTerminal(`PERFORMANCE AUDIT: Completed Goals: [${completedGoals}/${totalGoals}] | Active Operations Queue: ${activeTasks}.`, 'green');
-    logTerminal(`TACTICAL PRIORITY EVALUATION: Calculated Average Priority Score at [${avgPriority}].`, 'cyan');
+    logTerminal(`METRICS SYNC: Parsed ${totalGoals} directives, ${activeTasks} active operations.`, 'green');
+    
+    // 2. Render dynamic contents based on filter criteria
+    applyFiltersAndCompileTree();
+}
 
-    // 2. Render Standalone Unassigned Operations
-    renderStandaloneTasks(standaloneTasks);
+/* =====================================================================
+ * DYNAMIC FILTERING & COMPILING ALGORITHM
+ * ===================================================================== */
+function applyFiltersAndCompileTree() {
+    if (!rawDashboardState) return;
+    
+    const selectedStatus = statusFilterEl ? statusFilterEl.value : 'ALL';
+    const selectedLevel = levelFilterEl ? levelFilterEl.value : 'ALL';
+    
+    logTerminal(`FILTER ENGINE: Compiling tree [Status: ${selectedStatus}] [Level: ${selectedLevel}]...`, 'cyan');
+    
+    // A. Filter Standalone Tasks by status
+    let filteredTasks = rawDashboardState.standalone_tasks || [];
+    if (selectedStatus === 'ACTIVE') {
+        filteredTasks = filteredTasks.filter(t => t.status === 'TODO' || t.status === 'IN_PROGRESS');
+    } else if (selectedStatus === 'COMPLETED') {
+        filteredTasks = filteredTasks.filter(t => t.status === 'COMPLETED');
+    } else if (selectedStatus === 'PAUSED') {
+        filteredTasks = []; // standalone tasks do not support PAUSED state
+    }
+    renderStandaloneTasks(filteredTasks);
+    
+    // B. Build filtered Goals Hierarchy with child-promotion logic
+    const filteredTree = compileFilteredTree(rawDashboardState.goals_tree || [], selectedStatus, selectedLevel);
+    renderGoalsTree(filteredTree);
+    
+    logTerminal(`DIRECTIVES: Rendered filtered canvas showing ${filteredTree.length} root branches.`, 'green');
+}
 
-    // 3. Compile and Render Nested Hierarchical Tree
-    renderGoalsTree(goalsTree);
+/* =====================================================================
+ * RECURSIVE HIERARCHICAL NODE PROMOTION FILTER
+ * ===================================================================== */
+function compileFilteredTree(nodes, selectedStatus, selectedLevel) {
+    let result = [];
+    
+    function traverse(node) {
+        // Compile sub_goals recursively first
+        let filteredChildren = [];
+        if (node.sub_goals && node.sub_goals.length > 0) {
+            for (const sub of node.sub_goals) {
+                filteredChildren = filteredChildren.concat(traverse(sub));
+            }
+        }
+        
+        const matchesStatus = (selectedStatus === 'ALL' || node.status === selectedStatus);
+        const matchesLevel = (selectedLevel === 'ALL' || node.level === selectedLevel);
+        
+        if (matchesStatus && matchesLevel) {
+            // Matches search criteria! Node retains place in tree, referencing only filtered sub-directives
+            return [{
+                ...node,
+                sub_goals: filteredChildren
+            }];
+        } else {
+            // Node fails parameters, but matching children are PROMOTED up to node's level!
+            return filteredChildren;
+        }
+    }
+    
+    for (const node of nodes) {
+        result = result.concat(traverse(node));
+    }
+    
+    return result;
 }
 
 /* =====================================================================
@@ -236,21 +301,17 @@ function renderStandaloneTasks(tasks) {
     if (tasks.length === 0) {
         standaloneTasksListEl.innerHTML = `
             <div class="log-line text-muted" style="text-align: center; padding: 30px 0;">
-                NO STANDALONE OPERATIONS QUEUED.<br>ALL ACTIONS ALIGNED TO TACTICAL DIRECTIVES.
+                NO OPERATIONS QUEUED FOR SELECTED STATUS FILTER.
             </div>
         `;
-        logTerminal('STANDALONE ENGINE: Standby mode. All tasks mapped inside goals tree.', 'muted');
         return;
     }
     
-    // Sorted descending by priority score (pre-sorted backend, but guaranteed here)
     const sortedTasks = [...tasks].sort((a, b) => (b.priority_score || 0) - (a.priority_score || 0));
     
     sortedTasks.forEach(task => {
         standaloneTasksListEl.appendChild(compileTaskNode(task));
     });
-    
-    logTerminal(`STANDALONE ENGINE: Mounted ${tasks.length} unassigned tactical items sorted by urgency matrix.`, 'cyan');
 }
 
 /* =====================================================================
@@ -261,17 +322,15 @@ function renderGoalsTree(goalsTree) {
     
     if (goalsTree.length === 0) {
         goalsTreeContainerEl.innerHTML = `
-            <div class="log-line text-red" style="text-align: center; padding: 60px 0; font-family: var(--font-mono);">
-                [!!! CRITICAL SYSTEM WARNING !!!]<br>
-                NO ACTIVE GOAL DATABRICKS RECOVERED FROM COMMAND ARCHIVES.<br>
-                PLEASE INITIALIZE AN EPIC DIRECTIVE TO DISPLAY DECISION GRAPHICS.
+            <div class="log-line text-amber" style="text-align: center; padding: 60px 0; font-family: var(--font-mono);">
+                [!!! TACTICAL FEEDEMPTY !!!]<br>
+                NO SYSTEM DIRECTIVES MATCH THE SELECTED FILTERS.<br>
+                ADJUST LEVEL / STATUS PARAMETERS TO RESTORE VISUALS.
             </div>
         `;
-        logTerminal('DIRECTIVES DATABASE: No top-level active epic nodes located.', 'red');
         return;
     }
     
-    // Sort top level goals descending by computed priority score
     const sortedTopLevel = [...goalsTree].sort((a, b) => (b.priority_score || 0) - (a.priority_score || 0));
     
     sortedTopLevel.forEach(epicNode => {
@@ -280,8 +339,6 @@ function renderGoalsTree(goalsTree) {
         const doc = parser.parseFromString(epicHtml, 'text/html');
         goalsTreeContainerEl.appendChild(doc.body.firstChild);
     });
-    
-    logTerminal('DIRECTIVES ENGINE: Successfully generated graphical vector branches.', 'green');
 }
 
 /* =====================================================================
@@ -336,7 +393,6 @@ function compileGoalHierarchyNode(goal, depth = 0) {
     
     let tasksHtml = '';
     if (totalTasks > 0) {
-        // Sort tasks descending by score
         const sortedTasks = [...tasks].sort((a, b) => (b.priority_score || 0) - (a.priority_score || 0));
         tasksHtml = `
             <div class="nested-content-divider">ASSOCIATED OPERATIONS [${completedTasks}/${totalTasks}]</div>
@@ -367,7 +423,6 @@ function compileGoalHierarchyNode(goal, depth = 0) {
     const subGoals = goal.sub_goals || [];
     let subGoalsHtml = '';
     if (subGoals.length > 0) {
-        // Sort subgoals by score descending
         const sortedSubGoals = [...subGoals].sort((a, b) => (b.priority_score || 0) - (a.priority_score || 0));
         subGoalsHtml = `
             <div class="nested-content-divider">NESTED SUB-DIRECTIVES [${subGoals.length}]</div>
@@ -380,13 +435,17 @@ function compileGoalHierarchyNode(goal, depth = 0) {
     const deadlineStr = goal.deadline_utc ? formatDeadline(goal.deadline_utc) : 'N/A';
     const categoryBadge = goal.category ? `<span class="goal-category">${escapeHtml(goal.category)}</span>` : '';
     
-    // Dynamic indentation adjustment to align hierarchy beautifully without breaking hud border compositions
+    // Render an interactive collapsible indicator if there are nested sub-goals or tasks
+    const hasCollapsibleChildren = subGoals.length > 0 || totalTasks > 0;
+    const toggleIndicator = hasCollapsibleChildren ? `<span class="toggle-indicator">[ - ]</span>` : '';
+    
     const paddingLeftStyle = depth > 0 ? `style="margin-left: 5px;"` : '';
     
     return `
         <div class="goal-node ${levelClass}" data-id="${goal.id}" ${paddingLeftStyle}>
             <div class="goal-header">
                 <div class="goal-meta">
+                    ${toggleIndicator}
                     <span class="goal-badge">${goal.level}</span>
                     <span class="goal-id">#${goal.id}</span>
                     ${categoryBadge}
@@ -435,13 +494,71 @@ document.addEventListener('DOMContentLoaded', () => {
     // Perform initial synchronization
     syncDashboardData();
     
-    // Set interval loop to synchronize automatically every 10 seconds for real-time fidelity
+    // Register automatic synchronization loop (runs every 10 seconds)
     setInterval(() => {
-        if (!errorOverlayEl.classList.contains('hidden')) {
-            // Skip automated background syncing if the datalink overlay is actively showing/counting down
-            return;
-        }
-        logTerminal('INITIATING BACKGROUND METRICS AUTO-SYNC...', 'muted');
+        if (!errorOverlayEl.classList.contains('hidden')) return; // Skip if offline active countdown screen
+        logTerminal('BACKGROUND METRICS AUTO-SYNC RUNNING...', 'muted');
         syncDashboardData();
     }, 10000);
+
+    // 1. REGISTER SELECT DROPDOWN FILTER TRIGGERS
+    if (statusFilterEl) {
+        statusFilterEl.addEventListener('change', () => {
+            applyFiltersAndCompileTree();
+        });
+    }
+    if (levelFilterEl) {
+        levelFilterEl.addEventListener('change', () => {
+            applyFiltersAndCompileTree();
+        });
+    }
+
+    // 2. REGISTER AUDIT TERMINAL MINIMIZE/MAXIMIZE TOGGLE
+    if (terminalToggleBtn && terminalPanel) {
+        terminalToggleBtn.addEventListener('click', () => {
+            terminalPanel.classList.toggle('minimized');
+            const isMinimized = terminalPanel.classList.contains('minimized');
+            terminalToggleBtn.textContent = isMinimized ? 'MAXIMIZE' : 'MINIMIZE';
+            logTerminal(`SYSTEM HUD: Audit feed terminal ${isMinimized ? 'MINIMIZED' : 'MAXIMIZED'}.`, 'cyan');
+        });
+    }
+
+    // 3. REGISTER RECURSIVE DELEGATION COLLAPSIBLE HOOK
+    goalsTreeContainerEl.addEventListener('click', (event) => {
+        // Intercept clicked goal header
+        const header = event.target.closest('.goal-header');
+        if (!header) return;
+        
+        // Prevent toggle if clicked interactive pills/badges
+        if (event.target.closest('.status-pill') || event.target.closest('.score-badge') || event.target.closest('.goal-category')) {
+            return;
+        }
+        
+        const node = header.closest('.goal-node');
+        if (!node) return;
+        
+        const subContainer = node.querySelector('.sub-goals-container');
+        const tasksList = node.querySelector('.goal-tasks-list');
+        const indicator = header.querySelector('.toggle-indicator');
+        
+        if (subContainer || tasksList) {
+            let isCollapsedNow = false;
+            
+            if (subContainer) {
+                subContainer.classList.toggle('collapsed');
+                isCollapsedNow = subContainer.classList.contains('collapsed');
+            }
+            if (tasksList) {
+                tasksList.classList.toggle('collapsed');
+                isCollapsedNow = tasksList.classList.contains('collapsed');
+            }
+            
+            if (indicator) {
+                indicator.textContent = isCollapsedNow ? '[ + ]' : '[ - ]';
+            }
+            
+            const levelTag = node.querySelector('.goal-badge').textContent;
+            logTerminal(`DIRECTIVES: Node #${node.dataset.id} (${levelTag}) ${isCollapsedNow ? 'COLLAPSED' : 'EXPANDED'}.`, 'cyan');
+        }
+    });
 });

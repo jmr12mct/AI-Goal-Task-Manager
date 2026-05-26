@@ -115,7 +115,20 @@
                         <div class="panel-subtitle">EPICS // MILESTONES // MICRO-GOALS</div>
                     </div>
                     <div class="tree-controls">
-                        <span class="control-tag">LEVEL_FILTER: ACTIVE</span>
+                        <span class="control-label">STATUS:</span>
+                        <select id="status-filter" class="hud-select">
+                            <option value="ALL">ALL STATUSES</option>
+                            <option value="ACTIVE" selected>ACTIVE ONLY</option>
+                            <option value="COMPLETED">COMPLETED ONLY</option>
+                            <option value="PAUSED">PAUSED ONLY</option>
+                        </select>
+                        <span class="control-label" style="margin-left: 12px;">LEVEL:</span>
+                        <select id="level-filter" class="hud-select">
+                            <option value="ALL">ALL LEVELS</option>
+                            <option value="EPIC">EPICS ONLY</option>
+                            <option value="MILESTONE">MILESTONES ONLY</option>
+                            <option value="MICRO">MICRO ONLY</option>
+                        </select>
                     </div>
                 </div>
                 <div class="panel-content tree-scroll-container" id="goals-tree-container">
@@ -127,10 +140,15 @@
 
         <!-- FOOTER: TERMINAL COMMAND LOG -->
         <footer class="hud-footer hud-panel" id="terminal-panel">
-            <div class="panel-header">
-                <div class="panel-title-icon">&gt;_</div>
-                <h2 class="panel-title">TACTICAL AUDIT FEED</h2>
-                <div class="panel-subtitle">LIVE OPERATIONS & TRANSACTION RECORDS</div>
+            <div class="panel-header flex-header">
+                <div style="display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 10px;">
+                    <div class="panel-title-icon">&gt;_</div>
+                    <div>
+                        <h2 class="panel-title">TACTICAL AUDIT FEED</h2>
+                        <div class="panel-subtitle">LIVE OPERATIONS & TRANSACTION RECORDS</div>
+                    </div>
+                </div>
+                <button id="terminal-toggle-btn" class="hud-btn-mini" title="Minimize / Maximize Terminal">MINIMIZE</button>
             </div>
             <div class="panel-content terminal-log" id="terminal-log-content">
                 <div class="log-line text-green">[07:25:37] COMMANDER DETECTED. RETRO-FUTURISTIC TACTICAL INTERFACE STANDING BY.</div>
