@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOALMANAGER // TACTICAL HUD DASHBOARD</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="crt-texture">
+    <!-- Cyber Grid Overlay -->
+    <div class="hud-grid-overlay"></div>
+
+    <div class="hud-container">
+        <!-- HEADER CONSOLE -->
+        <header class="hud-header">
+            <div class="header-left">
+                <div class="system-tag">SYS_OP: TACTICAL_GRID_v4.2.1</div>
+                <h1 class="header-title">GOALMANAGER <span class="accent-text">// DECISION MATRIX</span></h1>
+            </div>
+            
+            <div class="header-center">
+                <div class="metric-mini">
+                    <span class="label">SYS_STATUS:</span>
+                    <span class="value status-online" id="sys-status">CONNECTING...</span>
+                </div>
+                <div class="metric-mini">
+                    <span class="label">SYNC_TIME:</span>
+                    <span class="value" id="sync-time">--:--:--</span>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <div class="voice-command-hud">
+                    <span class="voice-label">VOICE_INPUT</span>
+                    <div class="voice-status">
+                        <span class="voice-text">ACTIVE</span>
+                        <div class="soundwave">
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- SUBHEADER DECORATIVE LINE -->
+        <div class="hud-divider">
+            <div class="divider-line"></div>
+            <div class="divider-dots"></div>
+        </div>
+
+        <!-- MAIN HUD CONTENT -->
+        <main class="hud-main-grid">
+            <!-- LEFT PANEL: TACTICAL STATS & STANDALONE TASKS -->
+            <section class="hud-left-panel">
+                <!-- STATS HUB -->
+                <div class="hud-panel stat-panel" id="stats-panel">
+                    <div class="panel-header">
+                        <div class="panel-title-icon">&sect;</div>
+                        <h2 class="panel-title">CORE METRICS</h2>
+                        <div class="panel-subtitle">TACTICAL PERFORMANCE</div>
+                    </div>
+                    <div class="panel-content">
+                        <div class="metrics-grid">
+                            <div class="metric-card">
+                                <span class="metric-value" id="metric-goals-total">0</span>
+                                <span class="metric-label">TOTAL GOALS</span>
+                            </div>
+                            <div class="metric-card">
+                                <span class="metric-value" id="metric-goals-completed">0</span>
+                                <span class="metric-label">COMPLETED GOALS</span>
+                            </div>
+                            <div class="metric-card">
+                                <span class="metric-value" id="metric-tasks-active">0</span>
+                                <span class="metric-label">ACTIVE TASKS</span>
+                            </div>
+                            <div class="metric-card">
+                                <span class="metric-value" id="metric-priority-avg">0.0</span>
+                                <span class="metric-label">AVG TASK PRIORITY</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STANDALONE TASKS PANEL -->
+                <div class="hud-panel task-panel" id="tasks-panel">
+                    <div class="panel-header">
+                        <div class="panel-title-icon">&#9670;</div>
+                        <h2 class="panel-title">UNASSIGNED OPERATIONS</h2>
+                        <div class="panel-subtitle">STANDALONE ACTIONS SORTED BY PRIORITY</div>
+                    </div>
+                    <div class="panel-content max-h-tasks" id="standalone-tasks-list">
+                        <!-- Tasks dynamically populated -->
+                        <div class="terminal-loader">INITIALIZING SENSORS...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT PANEL: NESTED GOALS TREE CONSOLE -->
+            <section class="hud-right-panel hud-panel" id="goals-tree-panel">
+                <div class="panel-header flex-header">
+                    <div>
+                        <div class="panel-title-icon">&#9638;</div>
+                        <h2 class="panel-title">HIERARCHICAL GOALS DECISION TREE</h2>
+                        <div class="panel-subtitle">EPICS // MILESTONES // MICRO-GOALS</div>
+                    </div>
+                    <div class="tree-controls">
+                        <span class="control-tag">LEVEL_FILTER: ACTIVE</span>
+                    </div>
+                </div>
+                <div class="panel-content tree-scroll-container" id="goals-tree-container">
+                    <!-- Recursive Goals tree dynamically populated -->
+                    <div class="terminal-loader">DECRYPTING DIRECTIVES...</div>
+                </div>
+            </section>
+        </main>
+
+        <!-- FOOTER: TERMINAL COMMAND LOG -->
+        <footer class="hud-footer hud-panel" id="terminal-panel">
+            <div class="panel-header">
+                <div class="panel-title-icon">&gt;_</div>
+                <h2 class="panel-title">TACTICAL AUDIT FEED</h2>
+                <div class="panel-subtitle">LIVE OPERATIONS & TRANSACTION RECORDS</div>
+            </div>
+            <div class="panel-content terminal-log" id="terminal-log-content">
+                <div class="log-line text-green">[07:25:37] COMMANDER DETECTED. RETRO-FUTURISTIC TACTICAL INTERFACE STANDING BY.</div>
+                <div class="log-line text-cyan">[07:25:38] INJECTING DEPENDENCY LIBRARIES... OK.</div>
+                <div class="log-line text-amber">[07:25:38] PINGING TACTICAL ENGINE PORT 8000...</div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ERROR GLASS OVERLAY -->
+    <div id="error-overlay" class="hidden">
+        <div class="error-dialog hud-panel alert-amber">
+            <div class="error-header">
+                <span class="error-badge">!!! ALARM !!!</span>
+                <h2>DATALINK CORRUPTION</h2>
+            </div>
+            <div class="error-body">
+                <p>THE TACTICAL INTELLIGENCE CORE AT <code class="neon-code">http://127.0.0.1:8000</code> COULD NOT BE RESOLVED.</p>
+                <div class="diagnostic-console">
+                    <span class="diag-line">> ERROR: NET::ERR_CONNECTION_REFUSED</span>
+                    <span class="diag-line">> DIAGNOSIS: TACTICAL BACKEND REST API RUNTIME IS OFFLINE</span>
+                    <span class="diag-line">> SYSTEM STATE: SUSPENDED</span>
+                </div>
+                <p class="retry-msg">ATTEMPTING AUTO-RECOVERY IN <span id="retry-timer" class="neon-text">5</span> SECONDS...</p>
+            </div>
+            <div class="error-actions">
+                <button id="reconnect-btn" class="hud-btn">MANUAL OVERRIDE RECONNECT</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

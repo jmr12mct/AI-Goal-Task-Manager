@@ -1,0 +1,1053 @@
+/* =====================================================================
+ * 🎓 RETRO-FUTURISTIC TACTICAL HUD - STYLESHEET
+ * =====================================================================
+ * Theme: Cybernetic command console HUD
+ * Typography: 'Share Tech Mono' (Headers & Metrics) + 'Outfit' (Body)
+ * Color Palette: Obsidian dark, cyber cyan, matrix green, warning amber, critical red
+ * ===================================================================== */
+
+:root {
+    /* Color Palette */
+    --bg-dark: #05070c;
+    --bg-panel: rgba(12, 18, 28, 0.85);
+    --bg-panel-solid: #0d121c;
+    
+    /* Neon Glow Accents */
+    --cyan: #00f3ff;
+    --green: #00ff66;
+    --amber: #ffaa00;
+    --red: #ff3366;
+    --muted-blue: #3d5066;
+    
+    /* Transparent Borders */
+    --border-cyan: rgba(0, 243, 255, 0.35);
+    --border-green: rgba(0, 255, 102, 0.25);
+    --border-amber: rgba(255, 170, 0, 0.25);
+    --border-red: rgba(255, 51, 102, 0.35);
+    --border-dim: rgba(61, 80, 102, 0.3);
+    
+    /* Shadows & Glows */
+    --glow-cyan: 0 0 12px rgba(0, 243, 255, 0.4);
+    --glow-green: 0 0 12px rgba(0, 255, 102, 0.4);
+    --glow-amber: 0 0 12px rgba(255, 170, 0, 0.4);
+    --glow-red: 0 0 12px rgba(255, 51, 102, 0.5);
+    
+    --glow-text-cyan: 0 0 6px rgba(0, 243, 255, 0.8);
+    --glow-text-green: 0 0 6px rgba(0, 255, 102, 0.8);
+    --glow-text-amber: 0 0 6px rgba(255, 170, 0, 0.8);
+    --glow-text-red: 0 0 6px rgba(255, 51, 102, 0.9);
+    
+    /* Fonts */
+    --font-mono: 'Share Tech Mono', monospace;
+    --font-sans: 'Outfit', sans-serif;
+    
+    /* UI Transitions */
+    --transition-fast: 0.15s ease;
+    --transition-norm: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* =====================================================================
+ * RESET & CORE ATMOSPHERE
+ * ===================================================================== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: #e2e8f0;
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    overflow-x: hidden;
+    height: 100vh;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+}
+
+/* Subtle CRT Scanline overlay */
+.crt-texture::after {
+    content: " ";
+    display: block;
+    position: fixed;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
+    background-size: 100% 3px;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+/* Cybernetic Grid Matrix Background */
+.hud-grid-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: 
+        linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: rgba(13, 18, 28, 0.5);
+    border-left: 1px solid var(--border-dim);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--muted-blue);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--cyan);
+    box-shadow: var(--glow-cyan);
+}
+
+/* =====================================================================
+ * HUD CONTAINER LAYOUT
+ * ===================================================================== */
+.hud-container {
+    width: 100%;
+    max-width: 1800px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 15px;
+    z-index: 10;
+    animation: boot-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* =====================================================================
+ * TACTICAL HEADER
+ * ===================================================================== */
+.hud-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-cyan);
+    box-shadow: var(--glow-cyan);
+    padding: 12px 24px;
+    border-radius: 4px;
+    position: relative;
+    clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 15px 100%, 0 calc(100% - 15px));
+    backdrop-filter: blur(10px);
+}
+
+/* Decorative Header corners */
+.hud-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 12px; height: 12px;
+    border-top: 2px solid var(--cyan);
+    border-left: 2px solid var(--cyan);
+}
+.hud-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; right: 0; width: 12px; height: 12px;
+    border-bottom: 2px solid var(--cyan);
+    border-right: 2px solid var(--cyan);
+}
+
+.header-left .system-tag {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--cyan);
+    text-shadow: var(--glow-text-cyan);
+    letter-spacing: 2px;
+}
+.header-left .header-title {
+    font-family: var(--font-sans);
+    font-weight: 800;
+    font-size: 1.6rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.header-left .accent-text {
+    font-family: var(--font-mono);
+    color: var(--cyan);
+    text-shadow: var(--glow-text-cyan);
+    font-size: 1.4rem;
+}
+
+.header-center {
+    display: flex;
+    gap: 30px;
+}
+.metric-mini {
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-mono);
+}
+.metric-mini .label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+}
+.metric-mini .value {
+    font-size: 1rem;
+    color: var(--cyan);
+    font-weight: bold;
+    text-shadow: var(--glow-text-cyan);
+}
+.metric-mini .value.status-online {
+    color: var(--green);
+    text-shadow: var(--glow-text-green);
+}
+.metric-mini .value.status-offline {
+    color: var(--red);
+    text-shadow: var(--glow-text-red);
+}
+
+.voice-command-hud {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-family: var(--font-mono);
+}
+.voice-command-hud .voice-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 1.5px;
+}
+.voice-command-hud .voice-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.voice-command-hud .voice-text {
+    font-size: 0.9rem;
+    color: var(--cyan);
+    font-weight: bold;
+    text-shadow: var(--glow-text-cyan);
+}
+
+/* Soundwave CSS Animation */
+.soundwave {
+    display: flex;
+    align-items: flex-end;
+    gap: 2.5px;
+    height: 16px;
+}
+.soundwave .bar {
+    width: 2px;
+    height: 100%;
+    background-color: var(--cyan);
+    animation: sound-bounce 0.8s ease-in-out infinite alternate;
+    box-shadow: 0 0 6px var(--cyan);
+}
+.soundwave .bar:nth-child(1) { animation-delay: 0.1s; }
+.soundwave .bar:nth-child(2) { animation-delay: 0.4s; }
+.soundwave .bar:nth-child(3) { animation-delay: 0.2s; }
+.soundwave .bar:nth-child(4) { animation-delay: 0.6s; }
+.soundwave .bar:nth-child(5) { animation-delay: 0.3s; }
+.soundwave .bar:nth-child(6) { animation-delay: 0.5s; }
+.soundwave .bar:nth-child(7) { animation-delay: 0.15s; }
+.soundwave .bar:nth-child(8) { animation-delay: 0.7s; }
+
+@keyframes sound-bounce {
+    0% { height: 15%; }
+    100% { height: 100%; }
+}
+
+/* =====================================================================
+ * DECORATIVE LINES & DIVIDERS
+ * ===================================================================== */
+.hud-divider {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 2px 0;
+}
+.hud-divider .divider-line {
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, var(--cyan) 15%, var(--cyan) 85%, transparent 100%);
+    box-shadow: var(--glow-cyan);
+    opacity: 0.6;
+}
+.hud-divider .divider-dots {
+    height: 3px;
+    background-image: radial-gradient(var(--cyan) 1px, transparent 1px);
+    background-size: 8px 3px;
+    opacity: 0.4;
+}
+
+/* =====================================================================
+ * PANELS ARCHITECTURE
+ * ===================================================================== */
+.hud-main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.8fr;
+    gap: 15px;
+    flex-grow: 1;
+    min-height: 0; /* Important for grid containment and scrolling */
+}
+
+/* Tactical Panel structure */
+.hud-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-dim);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    backdrop-filter: blur(8px);
+    transition: border-color var(--transition-norm), box-shadow var(--transition-norm);
+}
+.hud-panel:hover {
+    border-color: var(--border-cyan);
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.1);
+}
+
+.panel-header {
+    border-bottom: 1px solid var(--border-dim);
+    padding: 10px 18px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    column-gap: 10px;
+    background: rgba(13, 22, 38, 0.4);
+}
+.panel-header.flex-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.panel-title-icon {
+    font-family: var(--font-mono);
+    color: var(--cyan);
+    font-size: 1.1rem;
+    text-shadow: var(--glow-text-cyan);
+    grid-row: 1 / 3;
+}
+.panel-title {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: #ffffff;
+    text-transform: uppercase;
+}
+.panel-subtitle {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.panel-content {
+    padding: 15px;
+    flex-grow: 1;
+    min-height: 0;
+}
+
+/* Sub-panel decorations for corners */
+.hud-panel::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: -1px; width: 6px; height: 6px;
+    border-top: 2px solid var(--cyan);
+    border-left: 2px solid var(--cyan);
+    pointer-events: none;
+}
+.hud-panel::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; right: -1px; width: 6px; height: 6px;
+    border-bottom: 2px solid var(--cyan);
+    border-right: 2px solid var(--cyan);
+    pointer-events: none;
+}
+
+/* =====================================================================
+ * LEFT SIDE: METRICS HUB & STANDALONE TASKS
+ * ===================================================================== */
+.hud-left-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    min-height: 0;
+}
+
+.stat-panel {
+    flex-shrink: 0;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.metric-card {
+    background: rgba(18, 26, 40, 0.5);
+    border: 1px solid var(--border-dim);
+    padding: 12px;
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--border-cyan), transparent);
+}
+.metric-value {
+    font-family: var(--font-mono);
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: var(--cyan);
+    text-shadow: var(--glow-text-cyan);
+}
+.metric-label {
+    font-family: var(--font-sans);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+    text-transform: uppercase;
+}
+
+.task-panel {
+    flex-grow: 1;
+    min-height: 0;
+}
+.max-h-tasks {
+    overflow-y: auto;
+    height: 100%;
+}
+
+/* Dynamic loaders styling */
+.terminal-loader {
+    font-family: var(--font-mono);
+    color: var(--text-terminal);
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+    gap: 10px;
+}
+.terminal-loader::before {
+    content: '';
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--cyan);
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: rotate 0.8s linear infinite;
+}
+
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* =====================================================================
+ * RIGHT SIDE: GOALS TREE
+ * ===================================================================== */
+.tree-scroll-container {
+    overflow-y: auto;
+    max-height: 100%;
+    padding-right: 5px;
+}
+.tree-controls .control-tag {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    background: rgba(0, 243, 255, 0.1);
+    border: 1px solid var(--border-cyan);
+    padding: 2px 8px;
+    color: var(--cyan);
+    text-shadow: var(--glow-text-cyan);
+    border-radius: 2px;
+}
+
+/* =====================================================================
+ * RECURSIVE HIERARCHY TREE STYLING
+ * ===================================================================== */
+.goal-node {
+    margin-bottom: 18px;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    background: rgba(11, 16, 26, 0.4);
+}
+
+/* EPIC LEVEL GOAL CARD */
+.goal-node.level-epic {
+    border-left: 4px solid var(--cyan);
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.05);
+    border-top: 1px solid rgba(0, 243, 255, 0.15);
+    border-right: 1px solid rgba(0, 243, 255, 0.15);
+    border-bottom: 1px solid rgba(0, 243, 255, 0.15);
+}
+.goal-node.level-epic > .goal-header {
+    background: rgba(0, 243, 255, 0.06);
+}
+
+/* MILESTONE LEVEL GOAL CARD */
+.goal-node.level-milestone {
+    border-left: 4px solid var(--green);
+    border-top: 1px solid rgba(0, 255, 102, 0.1);
+    border-right: 1px solid rgba(0, 255, 102, 0.1);
+    border-bottom: 1px solid rgba(0, 255, 102, 0.1);
+}
+.goal-node.level-milestone > .goal-header {
+    background: rgba(0, 255, 102, 0.03);
+}
+
+/* MICRO LEVEL GOAL CARD */
+.goal-node.level-micro {
+    border-left: 4px solid var(--amber);
+    border-top: 1px solid rgba(255, 170, 0, 0.08);
+    border-right: 1px solid rgba(255, 170, 0, 0.08);
+    border-bottom: 1px solid rgba(255, 170, 0, 0.08);
+}
+.goal-node.level-micro > .goal-header {
+    background: rgba(255, 170, 0, 0.02);
+}
+
+/* Node Contents layout */
+.goal-header {
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-dim);
+}
+.goal-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.goal-badge {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-weight: bold;
+}
+.level-epic .goal-badge {
+    background: rgba(0, 243, 255, 0.15);
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+}
+.level-milestone .goal-badge {
+    background: rgba(0, 255, 102, 0.15);
+    border: 1px solid var(--green);
+    color: var(--green);
+}
+.level-micro .goal-badge {
+    background: rgba(255, 170, 0, 0.15);
+    border: 1px solid var(--amber);
+    color: var(--amber);
+}
+
+.goal-id {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+.goal-category {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--cyan);
+    border: 1px solid rgba(0, 243, 255, 0.2);
+    padding: 1px 5px;
+    background: rgba(0, 243, 255, 0.03);
+    text-transform: uppercase;
+}
+
+.goal-title-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    margin-right: 15px;
+}
+.goal-title {
+    font-family: var(--font-sans);
+    font-size: 1.05rem;
+    font-weight: bold;
+    color: #ffffff;
+}
+.level-epic > .goal-header .goal-title {
+    font-size: 1.15rem;
+}
+.goal-description {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* Eisenhower Dashboard Matrix elements */
+.goal-eisenhower {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+}
+.score-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-dim);
+    padding: 4px 8px;
+    border-radius: 2px;
+    background: rgba(18, 26, 40, 0.6);
+}
+.score-label {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+}
+.score-num {
+    font-size: 0.95rem;
+    font-weight: bold;
+}
+.score-num.level-high {
+    color: var(--red);
+    text-shadow: var(--glow-text-red);
+}
+.score-num.level-medium {
+    color: var(--amber);
+    text-shadow: var(--glow-text-amber);
+}
+.score-num.level-low {
+    color: var(--cyan);
+    text-shadow: var(--glow-text-cyan);
+}
+
+.goal-body {
+    padding: 12px 16px;
+}
+
+/* Status Badges */
+.status-pill {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 2px;
+    text-transform: uppercase;
+}
+.status-active {
+    background: rgba(0, 243, 255, 0.12);
+    color: var(--cyan);
+    border: 1px solid var(--cyan);
+}
+.status-completed {
+    background: rgba(0, 255, 102, 0.12);
+    color: var(--green);
+    border: 1px solid var(--green);
+}
+.status-paused {
+    background: rgba(255, 170, 0, 0.12);
+    color: var(--amber);
+    border: 1px solid var(--amber);
+}
+.status-archived {
+    background: rgba(61, 80, 102, 0.2);
+    color: var(--text-muted);
+    border: 1px solid var(--muted-blue);
+}
+
+/* Progress bar indicators */
+.goal-progress-bar {
+    height: 3px;
+    background: rgba(61, 80, 102, 0.2);
+    border-radius: 1px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+.goal-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--cyan), var(--green));
+    box-shadow: 0 0 4px var(--green);
+    width: 0%;
+    transition: width 0.5s ease-out;
+}
+
+/* Sub-goals and tasks rendering */
+.nested-content-divider {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin: 8px 0 6px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.nested-content-divider::after {
+    content: '';
+    flex-grow: 1;
+    height: 1px;
+    background: var(--border-dim);
+}
+
+.sub-goals-container {
+    margin-left: 12px;
+    padding-left: 16px;
+    border-left: 1px dashed var(--border-dim);
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Tasks lists layout inside goals */
+.goal-tasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.task-item {
+    background: rgba(18, 26, 40, 0.35);
+    border: 1px solid var(--border-dim);
+    border-radius: 3px;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all var(--transition-fast);
+}
+.task-item:hover {
+    background: rgba(18, 26, 40, 0.6);
+    border-color: var(--border-cyan);
+}
+
+.task-item-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.task-checkbox {
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--border-dim);
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all var(--transition-fast);
+}
+.task-checkbox.checked {
+    background: var(--green);
+    border-color: var(--green);
+    box-shadow: 0 0 6px rgba(0, 255, 102, 0.6);
+}
+.task-checkbox.in-progress {
+    background: var(--amber);
+    border-color: var(--amber);
+    box-shadow: 0 0 6px rgba(255, 170, 0, 0.6);
+    animation: pulse-glow 1s ease-in-out infinite alternate;
+}
+.task-checkbox.checked::after {
+    content: '\2713';
+    color: #05070c;
+    font-size: 9px;
+    font-weight: bold;
+}
+.task-checkbox.in-progress::after {
+    content: '\2022';
+    color: #05070c;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+@keyframes pulse-glow {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(1.1); opacity: 1; }
+}
+
+.task-title {
+    font-size: 0.85rem;
+    color: #e2e8f0;
+}
+.task-item.state-completed .task-title {
+    color: var(--text-muted);
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+.task-item-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.task-priority-badge {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    padding: 1px 5px;
+    border-radius: 2px;
+    border: 1px solid var(--border-dim);
+}
+.task-priority-badge.p-high {
+    color: var(--red);
+    border-color: var(--border-red);
+    background: rgba(255, 51, 102, 0.08);
+}
+.task-priority-badge.p-med {
+    color: var(--amber);
+    border-color: var(--border-amber);
+    background: rgba(255, 170, 0, 0.08);
+}
+.task-priority-badge.p-low {
+    color: var(--cyan);
+    border-color: var(--border-cyan);
+    background: rgba(0, 243, 255, 0.08);
+}
+
+.task-deadline {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+/* =====================================================================
+ * TACTICAL AUDIT TERMINAL FEED
+ * ===================================================================== */
+.hud-footer {
+    flex-shrink: 0;
+    min-height: 120px;
+    height: 120px;
+}
+.terminal-log {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    overflow-y: auto;
+    max-height: 100%;
+    color: var(--text-terminal);
+    padding: 5px 10px;
+    background: rgba(6, 8, 12, 0.6);
+    border: 1px solid var(--border-dim);
+    border-radius: 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.log-line {
+    line-height: 1.4;
+    word-break: break-all;
+}
+.log-line.text-green { color: var(--green); }
+.log-line.text-cyan { color: var(--cyan); }
+.log-line.text-amber { color: var(--amber); }
+.log-line.text-red { color: var(--red); }
+.log-line.text-muted { color: var(--text-muted); }
+
+/* =====================================================================
+ * ERROR DIALOG GLASS OVERLAY
+ * ===================================================================== */
+#error-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(5, 7, 12, 0.85);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(12px);
+    transition: opacity var(--transition-norm);
+}
+#error-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.error-dialog {
+    width: 90%;
+    max-width: 550px;
+    box-shadow: 0 0 30px rgba(255, 170, 0, 0.25);
+    border: 1px solid var(--border-amber);
+    animation: boot-up 0.5s ease-out;
+}
+.error-dialog.alert-amber::before { border-color: var(--amber); }
+.error-dialog.alert-amber::after { border-color: var(--amber); }
+
+.error-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-bottom: 1px solid var(--border-amber);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+.error-badge {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: bold;
+    background: rgba(255, 170, 0, 0.2);
+    border: 1px solid var(--amber);
+    color: var(--amber);
+    padding: 3px 10px;
+    border-radius: 2px;
+    animation: alarm-flash 1s steps(2, start) infinite;
+}
+@keyframes alarm-flash {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+}
+
+.error-dialog h2 {
+    font-family: var(--font-mono);
+    font-size: 1.25rem;
+    color: #ffffff;
+    letter-spacing: 1px;
+}
+.error-body p {
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+    color: var(--text-main);
+}
+.neon-code {
+    font-family: var(--font-mono);
+    color: var(--amber);
+    background: rgba(255, 170, 0, 0.1);
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+.diagnostic-console {
+    background: #06080c;
+    border: 1px solid var(--border-dim);
+    padding: 12px;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--amber);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border-radius: 3px;
+    margin-bottom: 15px;
+}
+.diag-line {
+    display: block;
+}
+.retry-msg {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+.neon-text {
+    color: var(--amber);
+    font-weight: bold;
+    text-shadow: var(--glow-text-amber);
+}
+
+.error-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 15px;
+}
+
+/* High tech HUD buttons */
+.hud-btn {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--cyan);
+    background: rgba(0, 243, 255, 0.08);
+    border: 1px solid var(--border-cyan);
+    padding: 8px 16px;
+    border-radius: 2px;
+    cursor: pointer;
+    text-shadow: var(--glow-text-cyan);
+    transition: all var(--transition-fast);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+}
+.hud-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.15), transparent);
+    transition: left 0.5s ease;
+}
+.hud-btn:hover {
+    background: rgba(0, 243, 255, 0.18);
+    box-shadow: var(--glow-cyan);
+}
+.hud-btn:hover::before {
+    left: 100%;
+}
+.hud-btn:active {
+    transform: scale(0.98);
+}
+
+/* =====================================================================
+ * HARDWARE-ACCELERATED TRANSITIONS & LOADS
+ * ===================================================================== */
+@keyframes boot-up {
+    0% {
+        opacity: 0;
+        transform: scale(0.97) translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* =====================================================================
+ * SCREEN SIZE RESPONSIVENESS
+ * ===================================================================== */
+@media (max-width: 1024px) {
+    body {
+        height: auto;
+        overflow-y: auto;
+        padding-bottom: 30px;
+    }
+    .hud-container {
+        height: auto;
+        gap: 15px;
+    }
+    .hud-main-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+    .hud-left-panel {
+        height: auto;
+    }
+    .max-h-tasks {
+        max-height: 400px;
+    }
+    .tree-scroll-container {
+        max-height: 500px;
+    }
+    .hud-footer {
+        height: 150px;
+    }
+    .hud-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+    .header-center {
+        justify-content: space-between;
+    }
+    .header-right {
+        align-self: flex-end;
+    }
+}
