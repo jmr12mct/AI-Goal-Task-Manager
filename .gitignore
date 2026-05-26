@@ -1,0 +1,36 @@
+# =====================================================================
+# 🎓 Educational Lesson: The .gitignore File
+# This file tells Git which folders and files to completely ignore.
+# We explicitly exclude virtual environments (.venv) and local 
+# databases (goalmanager.db) to ensure our repository remains
+# small, clean, secure, and cross-platform.
+# =====================================================================
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Local SQLite Database files
+*.db
+*.sqlite3
+
+# Python Caches & Compiled Files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# OS Specific Caches
+.DS_Store
+Thumbs.db
+
+# Environments & Secret Variables
+.env
+.env.local
+.env.development.local
+.env.testing.local
+.env.production.local
