@@ -1,9 +1,9 @@
 /* =====================================================================
- * 🎓 RETRO-FUTURISTIC TACTICAL HUD - CONTROLLER ENGINE (UX REFINED)
+ * 🎓 RETRO-FUTURISTIC TACTICAL HUD - CONTROLLER ENGINE (UX REFINED V2)
  * =====================================================================
  * Handles dashboard data synchronization, recursive node compilation, 
- * metrics aggregation, dynamic multi-level filters, collapsing nodes,
- * minimizable audit feed terminal, and offline recovery loops.
+ * metrics aggregation, dynamic Status filters with Ancestral Context 
+ * Preservation, collapsing nodes, minimizable terminal, and recovery.
  * ===================================================================== */
 
 const API_ENDPOINT = 'http://127.0.0.1:8000/api/dashboard';
@@ -18,6 +18,7 @@ const syncTimeEl = document.getElementById('sync-time');
 const errorOverlayEl = document.getElementById('error-overlay');
 const retryTimerEl = document.getElementById('retry-timer');
 const reconnectBtn = document.getElementById('reconnect-btn');
+const ledgerSyncStateEl = document.getElementById('ledger-sync-state');
 
 const metricGoalsTotalEl = document.getElementById('metric-goals-total');
 const metricGoalsCompletedEl = document.getElementById('metric-goals-completed');
@@ -28,7 +29,6 @@ const standaloneTasksListEl = document.getElementById('standalone-tasks-list');
 const goalsTreeContainerEl = document.getElementById('goals-tree-container');
 
 const statusFilterEl = document.getElementById('status-filter');
-const levelFilterEl = document.getElementById('level-filter');
 const terminalPanel = document.getElementById('terminal-panel');
 const terminalToggleBtn = document.getElementById('terminal-toggle-btn');
 
@@ -100,6 +100,11 @@ async function syncDashboardData() {
     sysStatusEl.textContent = 'CONNECTING...';
     sysStatusEl.className = 'value';
     
+    if (ledgerSyncStateEl) {
+        ledgerSyncStateEl.textContent = 'SYNCING';
+        ledgerSyncStateEl.className = 'meta-val text-amber';
+    }
+    
     try {
         const response = await fetch(API_ENDPOINT);
         if (!response.ok) {
@@ -121,6 +126,11 @@ async function syncDashboardData() {
         sysStatusEl.textContent = 'ONLINE';
         sysStatusEl.className = 'value status-online';
         
+        if (ledgerSyncStateEl) {
+            ledgerSyncStateEl.textContent = 'STANDBY';
+            ledgerSyncStateEl.className = 'meta-val text-green';
+        }
+        
         const now = new Date();
         syncTimeEl.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
         
@@ -131,6 +141,10 @@ async function syncDashboardData() {
     } catch (error) {
         console.error(error);
         logTerminal(`DATALINK CORRUPTION: ${error.message}. ENGAGING ALARM OVERLAYS.`, 'red');
+        if (ledgerSyncStateEl) {
+            ledgerSyncStateEl.textContent = 'CORRUPT';
+            ledgerSyncStateEl.className = 'meta-val text-red';
+        }
         triggerAlarmOverlay();
     } finally {
         isReconnecting = false;
@@ -219,9 +233,8 @@ function applyFiltersAndCompileTree() {
     if (!rawDashboardState) return;
     
     const selectedStatus = statusFilterEl ? statusFilterEl.value : 'ALL';
-    const selectedLevel = levelFilterEl ? levelFilterEl.value : 'ALL';
     
-    logTerminal(`FILTER ENGINE: Compiling tree [Status: ${selectedStatus}] [Level: ${selectedLevel}]...`, 'cyan');
+    logTerminal(`FILTER ENGINE: Status=[${selectedStatus}] (Ancestral Context Preservation ACTIVE)...`, 'cyan');
     
     // A. Filter Standalone Tasks by status
     let filteredTasks = rawDashboardState.standalone_tasks || [];
@@ -234,45 +247,83 @@ function applyFiltersAndCompileTree() {
     }
     renderStandaloneTasks(filteredTasks);
     
-    // B. Build filtered Goals Hierarchy with child-promotion logic
-    const filteredTree = compileFilteredTree(rawDashboardState.goals_tree || [], selectedStatus, selectedLevel);
+    // B. Build filtered Goals Hierarchy with Ancestral Context Preservation
+    const filteredTree = compileFilteredTree(rawDashboardState.goals_tree || [], selectedStatus);
     renderGoalsTree(filteredTree);
     
-    logTerminal(`DIRECTIVES: Rendered filtered canvas showing ${filteredTree.length} root branches.`, 'green');
+    logTerminal(`DIRECTIVES: Rendered filtered tree. ${filteredTree.length} base contextual branches drawn.`, 'green');
 }
 
 /* =====================================================================
- * RECURSIVE HIERARCHICAL NODE PROMOTION FILTER
+ * ANCESTRAL CONTEXT PRESERVATION FILTER IMPLEMENTATION
  * ===================================================================== */
-function compileFilteredTree(nodes, selectedStatus, selectedLevel) {
-    let result = [];
+function checkGoalMatch(goal, selectedStatus) {
+    if (selectedStatus === 'ALL') return true;
     
-    function traverse(node) {
-        // Compile sub_goals recursively first
-        let filteredChildren = [];
-        if (node.sub_goals && node.sub_goals.length > 0) {
-            for (const sub of node.sub_goals) {
-                filteredChildren = filteredChildren.concat(traverse(sub));
-            }
-        }
-        
-        const matchesStatus = (selectedStatus === 'ALL' || node.status === selectedStatus);
-        const matchesLevel = (selectedLevel === 'ALL' || node.level === selectedLevel);
-        
-        if (matchesStatus && matchesLevel) {
-            // Matches search criteria! Node retains place in tree, referencing only filtered sub-directives
-            return [{
-                ...node,
-                sub_goals: filteredChildren
-            }];
-        } else {
-            // Node fails parameters, but matching children are PROMOTED up to node's level!
-            return filteredChildren;
+    // a) Goal's own status matches
+    if (goal.status === selectedStatus) return true;
+    
+    // b) Any recursive child goals match
+    if (goal.sub_goals && goal.sub_goals.length > 0) {
+        for (const sub of goal.sub_goals) {
+            if (checkGoalMatch(sub, selectedStatus)) return true;
         }
     }
     
+    // c) Any direct tasks match
+    if (goal.tasks && goal.tasks.length > 0) {
+        for (const task of goal.tasks) {
+            if (selectedStatus === 'ACTIVE' && (task.status === 'TODO' || task.status === 'IN_PROGRESS')) {
+                return true;
+            }
+            if (selectedStatus === 'COMPLETED' && task.status === 'COMPLETED') {
+                return true;
+            }
+            if (selectedStatus === 'PAUSED' && task.status === 'PAUSED') {
+                return true;
+            }
+        }
+    }
+    
+    return false;
+}
+
+function compileFilteredTree(nodes, selectedStatus) {
+    let result = [];
+    
+    function processNode(node) {
+        // Discard node completely if neither it nor its descendants match the filter
+        const hasAnyMatch = checkGoalMatch(node, selectedStatus);
+        if (!hasAnyMatch) {
+            return null;
+        }
+        
+        // Recursively compile child goals
+        let filteredSubGoals = [];
+        if (node.sub_goals && node.sub_goals.length > 0) {
+            for (const sub of node.sub_goals) {
+                const compiledSub = processNode(sub);
+                if (compiledSub) {
+                    filteredSubGoals.push(compiledSub);
+                }
+            }
+        }
+        
+        // Determine direct match status
+        const isDirectMatch = (selectedStatus === 'ALL' || node.status === selectedStatus);
+        
+        return {
+            ...node,
+            sub_goals: filteredSubGoals,
+            isContextAnchor: !isDirectMatch // If it doesn't match directly, it serves as a contextual ancestor
+        };
+    }
+    
     for (const node of nodes) {
-        result = result.concat(traverse(node));
+        const compiled = processNode(node);
+        if (compiled) {
+            result.push(compiled);
+        }
     }
     
     return result;
@@ -301,7 +352,7 @@ function renderStandaloneTasks(tasks) {
     if (tasks.length === 0) {
         standaloneTasksListEl.innerHTML = `
             <div class="log-line text-muted" style="text-align: center; padding: 30px 0;">
-                NO OPERATIONS QUEUED FOR SELECTED STATUS FILTER.
+                NO STANDALONE OPERATIONS QUEUED.
             </div>
         `;
         return;
@@ -323,9 +374,9 @@ function renderGoalsTree(goalsTree) {
     if (goalsTree.length === 0) {
         goalsTreeContainerEl.innerHTML = `
             <div class="log-line text-amber" style="text-align: center; padding: 60px 0; font-family: var(--font-mono);">
-                [!!! TACTICAL FEEDEMPTY !!!]<br>
+                [!!! TACTICAL FEED EMPTY !!!]<br>
                 NO SYSTEM DIRECTIVES MATCH THE SELECTED FILTERS.<br>
-                ADJUST LEVEL / STATUS PARAMETERS TO RESTORE VISUALS.
+                ADJUST STATUS PARAMETERS TO RESTORE VISUALS.
             </div>
         `;
         return;
@@ -384,6 +435,7 @@ function compileTaskNode(task) {
 function compileGoalHierarchyNode(goal, depth = 0) {
     const levelClass = `level-${goal.level.toLowerCase()}`;
     const statusClass = `status-${goal.status.toLowerCase()}`;
+    const contextAnchorClass = goal.isContextAnchor ? 'context-anchor' : '';
     
     // Process child tasks
     const tasks = goal.tasks || [];
@@ -435,6 +487,9 @@ function compileGoalHierarchyNode(goal, depth = 0) {
     const deadlineStr = goal.deadline_utc ? formatDeadline(goal.deadline_utc) : 'N/A';
     const categoryBadge = goal.category ? `<span class="goal-category">${escapeHtml(goal.category)}</span>` : '';
     
+    // Render context anchor badge if this goal is only displayed for ancestral hierarchy context
+    const anchorBadge = goal.isContextAnchor ? `<span class="anchor-badge">ANCHOR</span>` : '';
+    
     // Render an interactive collapsible indicator if there are nested sub-goals or tasks
     const hasCollapsibleChildren = subGoals.length > 0 || totalTasks > 0;
     const toggleIndicator = hasCollapsibleChildren ? `<span class="toggle-indicator">[ - ]</span>` : '';
@@ -442,13 +497,14 @@ function compileGoalHierarchyNode(goal, depth = 0) {
     const paddingLeftStyle = depth > 0 ? `style="margin-left: 5px;"` : '';
     
     return `
-        <div class="goal-node ${levelClass}" data-id="${goal.id}" ${paddingLeftStyle}>
+        <div class="goal-node ${levelClass} ${contextAnchorClass}" data-id="${goal.id}" ${paddingLeftStyle}>
             <div class="goal-header">
                 <div class="goal-meta">
                     ${toggleIndicator}
                     <span class="goal-badge">${goal.level}</span>
                     <span class="goal-id">#${goal.id}</span>
                     ${categoryBadge}
+                    ${anchorBadge}
                 </div>
                 <div class="goal-eisenhower">
                     <div class="score-badge">
@@ -504,11 +560,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. REGISTER SELECT DROPDOWN FILTER TRIGGERS
     if (statusFilterEl) {
         statusFilterEl.addEventListener('change', () => {
-            applyFiltersAndCompileTree();
-        });
-    }
-    if (levelFilterEl) {
-        levelFilterEl.addEventListener('change', () => {
             applyFiltersAndCompileTree();
         });
     }

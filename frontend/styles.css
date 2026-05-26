@@ -60,7 +60,7 @@ body {
     color: #e2e8f0;
     font-family: var(--font-sans);
     line-height: 1.5;
-    overflow-x: hidden;
+    overflow: hidden; /* Restricts vertical screen bounce / locked HUD */
     height: 100vh;
     padding: 16px;
     display: flex;
@@ -121,6 +121,8 @@ body {
     height: 100%;
     gap: 15px;
     z-index: 10;
+    overflow: hidden; /* Confines all nested panels inside viewport */
+    box-sizing: border-box;
     animation: boot-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -207,55 +209,57 @@ body {
     text-shadow: var(--glow-text-red);
 }
 
-.voice-command-hud {
+.ledger-command-hud {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
     font-family: var(--font-mono);
 }
-.voice-command-hud .voice-label {
+.ledger-command-hud .ledger-label {
     font-size: 0.7rem;
     color: var(--text-muted);
     letter-spacing: 1.5px;
 }
-.voice-command-hud .voice-status {
+.ledger-command-hud .ledger-status {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    margin-top: 2px;
 }
-.voice-command-hud .voice-text {
-    font-size: 0.9rem;
-    color: var(--cyan);
+.ledger-command-hud .metadata-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85rem;
+}
+.ledger-command-hud .meta-lbl {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+.ledger-command-hud .meta-val {
     font-weight: bold;
+    font-size: 0.85rem;
+}
+.ledger-command-hud .meta-val.text-cyan {
+    color: var(--cyan);
     text-shadow: var(--glow-text-cyan);
 }
-
-/* Soundwave CSS Animation */
-.soundwave {
-    display: flex;
-    align-items: flex-end;
-    gap: 2.5px;
-    height: 16px;
+.ledger-command-hud .meta-val.text-green {
+    color: var(--green);
+    text-shadow: var(--glow-text-green);
 }
-.soundwave .bar {
-    width: 2px;
-    height: 100%;
-    background-color: var(--cyan);
-    animation: sound-bounce 0.8s ease-in-out infinite alternate;
-    box-shadow: 0 0 6px var(--cyan);
+.ledger-command-hud .meta-val.text-amber {
+    color: var(--amber);
+    text-shadow: var(--glow-text-amber);
 }
-.soundwave .bar:nth-child(1) { animation-delay: 0.1s; }
-.soundwave .bar:nth-child(2) { animation-delay: 0.4s; }
-.soundwave .bar:nth-child(3) { animation-delay: 0.2s; }
-.soundwave .bar:nth-child(4) { animation-delay: 0.6s; }
-.soundwave .bar:nth-child(5) { animation-delay: 0.3s; }
-.soundwave .bar:nth-child(6) { animation-delay: 0.5s; }
-.soundwave .bar:nth-child(7) { animation-delay: 0.15s; }
-.soundwave .bar:nth-child(8) { animation-delay: 0.7s; }
-
-@keyframes sound-bounce {
-    0% { height: 15%; }
-    100% { height: 100%; }
+.ledger-command-hud .meta-val.text-red {
+    color: var(--red);
+    text-shadow: var(--glow-text-red);
+}
+.ledger-command-hud .metadata-separator {
+    color: var(--muted-blue);
+    font-size: 0.8rem;
+    user-select: none;
 }
 
 /* =====================================================================
@@ -289,6 +293,7 @@ body {
     gap: 15px;
     flex-grow: 1;
     min-height: 0; /* Important for grid containment and scrolling */
+    overflow: hidden; /* Locks children from pushing parent container */
 }
 
 /* Tactical Panel structure */
@@ -301,6 +306,8 @@ body {
     position: relative;
     backdrop-filter: blur(8px);
     transition: border-color var(--transition-norm), box-shadow var(--transition-norm);
+    min-height: 0;
+    overflow: hidden;
 }
 .hud-panel:hover {
     border-color: var(--border-cyan);
@@ -347,6 +354,9 @@ body {
     padding: 15px;
     flex-grow: 1;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 /* Sub-panel decorations for corners */
@@ -1179,3 +1189,31 @@ body {
         align-self: flex-end;
     }
 }
+
+/* =====================================================================
+ * ANCESTRAL CONTEXT PRESERVATION (MUTED CONTEXT ANCHOR)
+ * ===================================================================== */
+.goal-node.context-anchor {
+    opacity: 0.55;
+    border-left-style: dashed !important;
+    border-top-style: dashed !important;
+    border-right-style: dashed !important;
+    border-bottom-style: dashed !important;
+    background: rgba(11, 16, 26, 0.2);
+    box-shadow: none !important;
+}
+.goal-node.context-anchor:hover {
+    opacity: 0.85;
+}
+.anchor-badge {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    background: rgba(61, 80, 102, 0.25);
+    border: 1px dashed var(--muted-blue);
+    color: var(--text-muted);
+    padding: 1px 5px;
+    border-radius: 2px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+

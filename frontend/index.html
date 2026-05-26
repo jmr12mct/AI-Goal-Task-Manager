@@ -34,19 +34,17 @@
             </div>
 
             <div class="header-right">
-                <div class="voice-command-hud">
-                    <span class="voice-label">VOICE_INPUT</span>
-                    <div class="voice-status">
-                        <span class="voice-text">ACTIVE</span>
-                        <div class="soundwave">
-                            <div class="bar"></div>
-                            <div class="bar"></div>
-                            <div class="bar"></div>
-                            <div class="bar"></div>
-                            <div class="bar"></div>
-                            <div class="bar"></div>
-                            <div class="bar"></div>
-                            <div class="bar"></div>
+                <div class="ledger-command-hud">
+                    <span class="ledger-label">DATALINK METADATA</span>
+                    <div class="ledger-status">
+                        <div class="metadata-item">
+                            <span class="meta-lbl">DB_SOURCE:</span>
+                            <span class="meta-val text-cyan">goalmanager.db</span>
+                        </div>
+                        <div class="metadata-separator">|</div>
+                        <div class="metadata-item">
+                            <span class="meta-lbl">LEDGER:</span>
+                            <span class="meta-val text-green" id="ledger-sync-state">STANDBY</span>
                         </div>
                     </div>
                 </div>
@@ -121,13 +119,6 @@
                             <option value="ACTIVE" selected>ACTIVE ONLY</option>
                             <option value="COMPLETED">COMPLETED ONLY</option>
                             <option value="PAUSED">PAUSED ONLY</option>
-                        </select>
-                        <span class="control-label" style="margin-left: 12px;">LEVEL:</span>
-                        <select id="level-filter" class="hud-select">
-                            <option value="ALL">ALL LEVELS</option>
-                            <option value="EPIC">EPICS ONLY</option>
-                            <option value="MILESTONE">MILESTONES ONLY</option>
-                            <option value="MICRO">MICRO ONLY</option>
                         </select>
                     </div>
                 </div>
